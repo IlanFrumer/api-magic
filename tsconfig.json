@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "types": ["vite/client"],
+    "target": "esnext",
+    "module": "commonjs",
+    "declaration": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "lib"
+  },
+  "include": ["src"]
+}
