@@ -1,4 +1,5 @@
 // @ts-check
+require('dotenv/config');
 
 /** @type {import('./src/generate').GeneratorOptions} */
 const options = {
@@ -6,7 +7,7 @@ const options = {
   api: [
     {
       container: 'test',
-      host: 'VITE_API_URL',
+      host: process.env.API_URL,
       swagger: '/api-json',
     },
   ],

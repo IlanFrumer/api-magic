@@ -1,12 +1,11 @@
-import { resolve } from 'path';
+import path from 'path';
 import axios from 'axios';
 import { createTypesFiles, createIndexFiles } from './createTypesFiles';
-import { viteLoader } from './viteLoader';
 import { OpenAPIV3 } from 'openapi-types';
 
 export type ApiOptions = {
   container: string;
-  host: string;
+  host?: string;
   swagger: string;
 };
 
@@ -17,11 +16,14 @@ export type GeneratorOptions = {
 
 export async function generate({ output, api }: GeneratorOptions) {
   const ops = Array.isArray(api) ? api : [api];
+  output = path.resolve(output);
   try {
     for (const op of ops) {
       const { swagger, host, container } = op;
-      const origin = await viteLoader(host);
-      const uri = origin + swagger;
+      if (typeof host === 'undefined') {
+        throw new Error('host is required');
+      }
+      const uri = new URL(swagger, host).href;
       console.log(`GENERATOR: Fetch ${uri}`);
 
       const { data } = await axios.get<OpenAPIV3.Document>(uri);
@@ -31,7 +33,7 @@ export async function generate({ output, api }: GeneratorOptions) {
         host,
         data,
         container,
-        output: resolve(output),
+        output,
         header,
       });
     }

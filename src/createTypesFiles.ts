@@ -27,7 +27,7 @@ export async function createTypesFiles({
   const imports = `
       import Axios, {AxiosResponse} from 'axios';
       import * as ${container} from './${container}.types';
-      const baseURL = import.meta.env.${host} as string;
+      const baseURL = '${host}';
       const api = Axios.create({ baseURL });
 
       type Arg = string | number;
