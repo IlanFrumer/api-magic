@@ -39,6 +39,7 @@ export function extractDef(
         break;
       case 'string':
         type = def.format === 'binary' ? 'Blob' : 'string';
+        type = def.enum ? def.enum.map((val) => `"${val}"`).join(' | ') : type;
         break;
       case 'number':
       case 'boolean':

@@ -68,7 +68,7 @@ export function createTypesMap(data: OpenAPIV3.Document, container: string) {
         path
           .replace(/-/g, '/')
           .replace(
-            /\/\{?([0-9a-z]+)\}?/gi,
+            /\/\{?([0-9a-z_]+)\}?/gi,
             (_, m1) => m1[0].toUpperCase() + m1.slice(1)
           )
           .replace(/^\/$/, 'Root')
