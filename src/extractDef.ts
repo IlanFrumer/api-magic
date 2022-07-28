@@ -35,7 +35,7 @@ export function extractDef(
         type = `${extractDef(def.items)}[]`;
         break;
       case 'integer':
-        type = 'number';
+        type = def.enum ? def.enum.join(' | ') : 'number';
         break;
       case 'string':
         type = def.format === 'binary' ? 'Blob' : 'string';
@@ -54,12 +54,14 @@ export function extractDef(
         else type = 'any';
         break;
       default:
-        throw new Error(`Unknown definition: ${JSON.stringify(def)}`);
+        if (def.nullable) type = 'null';
+        else if (JSON.stringify(def) === '{}') type = 'any';
+        else throw new Error(`Unknown definition: ${JSON.stringify(def)}`);
     }
   }
 
   if (extra) {
-    if (def.nullable) type += '| null';
+    if (def.nullable && type != 'null') type += '| null';
     if (def.format && def.format !== 'binary') type += `/* ${def.format} */`;
   }
 

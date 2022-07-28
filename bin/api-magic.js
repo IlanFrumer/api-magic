@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 const { generate } = require('../lib');
-const { resolve } = require('path');
+const { join } = require('path');
 
-const config = resolve('api-magic.config.js');
+const config = join(process.cwd(), 'api-magic.config.js');
 async function main() {
   try {
     const conf = require(config);

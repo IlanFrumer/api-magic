@@ -1,7 +1,15 @@
 import { isReference, extractDef } from './extractDef';
 import type { OpenAPIV3 } from 'openapi-types';
 
-const ARGS_REGEX = /\{([a-z]+)\}/gi;
+const ARGS_REGEX = /\{([a-z]+?)\}/gi;
+const SimpleTypes = new Set([
+  'Blob',
+  'string',
+  'number',
+  'boolean',
+  'number',
+  'any',
+]);
 
 type Entries<T> = {
   [K in keyof T]: [K, T[K]];
@@ -68,7 +76,7 @@ export function createTypesMap(data: OpenAPIV3.Document, container: string) {
         path
           .replace(/-/g, '/')
           .replace(
-            /\/\{?([0-9a-z_]+)\}?/gi,
+            /[\/,]\{?([0-9a-z_]+)\}?/gi,
             (_, m1) => m1[0].toUpperCase() + m1.slice(1)
           )
           .replace(/^\/$/, 'Root')
@@ -76,14 +84,20 @@ export function createTypesMap(data: OpenAPIV3.Document, container: string) {
 
       const params = postRef == null ? [entry] : [entry, 'data'];
 
-      const generic =
-        ref == null ? 'unknown' : ref === 'Blob' ? ref : `${container}.${ref}`;
+      const config = ref === 'Blob' ? ",{responseType: 'blob'}" : '';
 
-      const config = generic === 'Blob' ? ",{responseType: 'blob'}" : '';
+      let generic: string;
+      if (ref == null) {
+        generic = '';
+      } else if (SimpleTypes.has(ref.replace('[]', ''))) {
+        generic = `<${ref}>`;
+      } else {
+        generic = `<${container}.${ref}>`;
+      }
 
       Paths.push(`
         export const ${name} = (${args.join(', ')}) =>
-          api.${method}<${postGeneric}, AxiosResponse<${generic}>>(${params.join(
+          api.${method}<${postGeneric}, AxiosResponse${generic}>(${params.join(
         ', '
       )}${config})
         `);
@@ -98,8 +112,13 @@ export function createTypesMap(data: OpenAPIV3.Document, container: string) {
     }
 
     if (isReference(schema)) continue;
-    if (schema.type === 'string' && schema.enum) {
-      Types.set(node, schema.enum.map((val) => `"${val}"`).join(' | '));
+
+    if (schema.enum) {
+      if (schema.type === 'string') {
+        Types.set(node, schema.enum.map((val) => `"${val}"`).join(' | '));
+      } else {
+        Types.set(node, schema.enum.join(' | '));
+      }
     } else if (schema.type === 'object' && schema.properties) {
       const props: string[] = [];
       Interfaces.set(node, props);
@@ -108,6 +127,8 @@ export function createTypesMap(data: OpenAPIV3.Document, container: string) {
         const type = extractDef(def);
         props.push(`${prop}: ${type}`);
       }
+    } else {
+      Types.set(node, 'any');
     }
   }
 
